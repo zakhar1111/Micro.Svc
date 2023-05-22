@@ -1,3 +1,4 @@
+using Discount.API.Repos;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Discount.API", Version = "v1" });
 });
+
+builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
 var app = builder.Build();
 
