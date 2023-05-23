@@ -42,7 +42,7 @@ services:
     container_name: catalog.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "DatabaleSettings:ConnectionString=mongodb://catalogdb:27017"
+      - "DatabaseSettings:ConnectionString=mongodb://catalogdb:27017"
     depends_on:
       - catalogdb
     ports:
@@ -66,4 +66,17 @@ services:
     depends_on:
       - discountdb
     ports:
-      - "8003:80"
+      - "8002:80"
+
+  ocelotapigw:
+    container_name: ocelotapigw
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      
+    depends_on:
+        - catalog.api
+        - basket.api
+        - discount.api
+
+    ports:
+      - "8010:80"
