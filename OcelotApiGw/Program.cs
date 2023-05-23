@@ -1,10 +1,11 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Ocelot.Cache.CacheManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddOcelot();
+builder.Services.AddOcelot().AddCacheManager(settings => settings.WithDictionaryHandle());
 
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 builder.Configuration.AddJsonFile($"ocelot.{env}.json");
