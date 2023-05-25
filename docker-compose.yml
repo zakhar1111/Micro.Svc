@@ -40,12 +40,17 @@ services:
       context: .
       dockerfile: Ordering.API/Dockerfile
 
-
   ocelotapigw:
     image: ${DOCKER_REGISTRY-}ocelotapigw
     build:
       context: .
       dockerfile: OcelotApiGw/Dockerfile  
+
+  shopping.aggregator:
+    image: ${DOCKER_REGISTRY-}shoppingaggregator
+    build:
+      context: .
+      dockerfile: Shopping.Aggregator/Dockerfile
 
 volumes:
   mongo_data:
