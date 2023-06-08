@@ -19,4 +19,9 @@ RUN dotnet publish "Basket.API.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# TODO - Copy the discount.proto file to the /app/Protos directory in the container
+# COPY --from=discountgrpc /app/publish/Protos/discount.proto /app/Protos/discount.proto
+#./Discount.gRPC/Protos/discount.proto /app/Protos/discount.proto
+
 ENTRYPOINT ["dotnet", "Basket.API.dll"]
