@@ -5,53 +5,70 @@ using DiscountProtoServiceClient;
 using MassTransit;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+namespace Basket.API
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
-});
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
-// Redis Configuration
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
-});
+            // Add services to the container.
 
-// General Configuration
-builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+            builder.Services.AddControllers();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
+            });
 
-// Grpc Configuration
-builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(o => o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]));
-builder.Services.AddScoped<DiscountGrpcService>();
+            // Redis 
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
+            });
 
-// MassTransit-RabbitMQ Configuration
-builder.Services.AddMassTransit(config => {
-    config.UsingRabbitMq((ctx, cfg) => {
-        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-        //cfg.UseHealthCheck(ctx);
-    });
-});
+            // Basket Repo
+            builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 
-var app = builder.Build();
+            // Grpc 
+            builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(o => o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]));
+            builder.Services.AddScoped<DiscountGrpcService>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Basket.API v1"));
+            // MassTransit-RabbitMQ 
+            builder.Services.AddMassTransit(config =>
+            {
+                config.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+                    //cfg.UseHealthCheck(ctx);
+                });
+            });
+            //builder.Services.AddMassTransitHostedService();  
+            builder.Services.AddSingleton<IHostedService, MassTransitConsoleHostedService>();
+
+            //AutoMapper
+            builder.Services.AddAutoMapper(typeof(Program));
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Basket.API v1"));
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.Run();
+
+        }
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
