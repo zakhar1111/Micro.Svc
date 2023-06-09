@@ -4,6 +4,9 @@ using Ordering.Application;
 using Ordering.Infrastructure;
 using Ordering.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore.Design;
+using MassTransit;
+using Ordering.API.EventBusConsumer;
+using EventBus.Messages.Common;
 
 namespace Ordering.API
 {
@@ -25,6 +28,26 @@ namespace Ordering.API
 
             builder.Services.AddApplicationServices();
             builder.Services.AddInfrastructureServices(builder.Configuration);
+
+
+
+            // MassTransit-RabbitMQ Configuration
+            builder.Services.AddMassTransit(config => {
+
+                config.AddConsumer<BasketCheckoutConsumer>();
+
+                config.UsingRabbitMq((ctx, cfg) => {
+                    cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+                    //cfg.UseHealthCheck(ctx);
+
+                    cfg.ReceiveEndpoint(EventBusConstants.BasketCheckoutQueue, c => {
+                        c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
+                    });
+                });
+            });
+            builder.Services.AddSingleton<IHostedService, MassTransitConsoleHostedService>(); //builder.Services.AddMassTransitHostedService();
+            builder.Services.AddScoped<BasketCheckoutConsumer>();
+            builder.Services.AddAutoMapper(typeof(Program));
 
             var app = builder.Build();
 
