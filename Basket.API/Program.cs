@@ -2,7 +2,10 @@ using Basket.API;
 using Basket.API.GrpcServices;
 using Basket.API.Repos;
 using DiscountProtoServiceClient;
+using HealthChecks.UI.Client;
 using MassTransit;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 namespace Basket.API
@@ -51,6 +54,12 @@ namespace Basket.API
             //AutoMapper
             builder.Services.AddAutoMapper(typeof(Program));
 
+            // HealthCheck
+            var redisStrCon = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
+            builder.Services.AddHealthChecks()
+                .AddRedis(redisStrCon, "Redis Health", HealthStatus.Degraded);
+            // .AddRedis(builder.Configuration["CacheSettings: ConnectionString"], "Redis Health", HealthStatus.Degraded);
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -66,6 +75,15 @@ namespace Basket.API
             app.UseAuthorization();
 
             app.MapControllers();
+
+            
+
+            
+            app.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.Run();
 
