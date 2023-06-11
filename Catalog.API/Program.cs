@@ -1,6 +1,10 @@
 using Catalog.API.Data;
 using Catalog.API.Repos;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +18,12 @@ builder.Services.AddSwaggerGen( c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog.API", Version = "v1" });
 });
 
+// Data
 builder.Services.AddScoped<ICatalogContext, CatalogContext>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+// HealthCheck
+builder.Services.AddHealthChecks().AddMongoDb(builder.Configuration["DatabaseSettings:ConnectionString"], "MongoDb Health", HealthStatus.Degraded); ;
 
 var app = builder.Build();
 
@@ -31,6 +39,14 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+
 app.MapControllers();
+
+// add JSON responce of HealthCheck
+app.MapHealthChecks("/hc", new  HealthCheckOptions() 
+{
+    Predicate = _ => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
 app.Run();
