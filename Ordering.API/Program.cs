@@ -9,6 +9,8 @@ using Ordering.API.EventBusConsumer;
 using EventBus.Messages.Common;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using Serilog;
+using Common.Logging;
 
 namespace Ordering.API
 {
@@ -17,6 +19,9 @@ namespace Ordering.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Seri Logging
+            builder.Host.UseSerilog(SeriLogger.Configure);
 
             // Add services to the container.
 
