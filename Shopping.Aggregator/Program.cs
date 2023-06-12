@@ -4,6 +4,8 @@ using Polly;
 using Polly.Extensions.Http;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using Serilog;
+using Common.Logging;
 
 namespace Shopping.Aggregator
 {
@@ -14,34 +16,38 @@ namespace Shopping.Aggregator
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Seri Logging
+            builder.Host.UseSerilog(SeriLogger.Configure);
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            
+            //Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Shopping.Aggregator", Version = "v1" });
             });
 
+            // Http Clients
             builder.Services.AddHttpClient<ICatalogService, CatalogService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["ApiSettings:CatalogUrl"]))
-                //TODO .AddHttpMessageHandler<LoggingDelegatingHandler>()
+                .AddHttpMessageHandler<LoggingDelegatingHandler>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
 
             builder.Services.AddHttpClient<IBasketService, BasketService>(c =>
                     c.BaseAddress = new Uri(builder.Configuration["ApiSettings:BasketUrl"]))
-                    //.AddHttpMessageHandler<LoggingDelegatingHandler>()
+                    .AddHttpMessageHandler<LoggingDelegatingHandler>()
                     .AddPolicyHandler(GetRetryPolicy())
                     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
             builder.Services.AddHttpClient<IOrderService, OrderService>(c =>
                     c.BaseAddress = new Uri(builder.Configuration["ApiSettings:OrderingUrl"]))
-                    //.AddHttpMessageHandler<LoggingDelegatingHandler>()
+                    .AddHttpMessageHandler<LoggingDelegatingHandler>()
                     .AddPolicyHandler(GetRetryPolicy())
                     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
+            // Health Check
             builder.Services.AddHealthChecks()
                 .AddUrlGroup(new Uri($"{builder.Configuration["ApiSettings:CatalogUrl"]}/swagger/index.html"), "Catalog.API", HealthStatus.Degraded)
                 .AddUrlGroup(new Uri($"{builder.Configuration["ApiSettings:BasketUrl"]}/swagger/index.html"), "Basket.API", HealthStatus.Degraded)
