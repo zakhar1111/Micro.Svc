@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Design;
 using MassTransit;
 using Ordering.API.EventBusConsumer;
 using EventBus.Messages.Common;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 namespace Ordering.API
 {
@@ -49,6 +51,9 @@ namespace Ordering.API
             builder.Services.AddScoped<BasketCheckoutConsumer>();
             builder.Services.AddAutoMapper(typeof(Program));
 
+            // HealthCheck
+            builder.Services.AddHealthChecks().AddDbContextCheck<OrderContext>();
+
             var app = builder.Build();
 
             app.MigrateDatabase<OrderContext>((context, services) =>
@@ -73,6 +78,13 @@ namespace Ordering.API
 
 
             app.MapControllers();
+
+            // health Check response
+            app.MapHealthChecks("/hc", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.Run();
         }

@@ -1,6 +1,8 @@
 using Discount.API.Repos;
 using Microsoft.OpenApi.Models;
 using Discount.API.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 namespace Discount.API
 {
@@ -22,6 +24,9 @@ namespace Discount.API
 
             builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
+            builder.Services.AddHealthChecks()
+                .AddNpgSql(builder.Configuration["DatabaseSettings:ConnectionString"]);
+
             var app = builder.Build();
 
             app.MigrateDatabase<Program>();
@@ -39,6 +44,12 @@ namespace Discount.API
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.Run();
         }

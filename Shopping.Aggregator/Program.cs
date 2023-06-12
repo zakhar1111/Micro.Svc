@@ -2,7 +2,8 @@ using Microsoft.OpenApi.Models;
 using Shopping.Aggregator.Services;
 using Polly;
 using Polly.Extensions.Http;
-
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 namespace Shopping.Aggregator
 {
@@ -41,6 +42,11 @@ namespace Shopping.Aggregator
                     .AddPolicyHandler(GetRetryPolicy())
                     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
+            builder.Services.AddHealthChecks()
+                .AddUrlGroup(new Uri($"{builder.Configuration["ApiSettings:CatalogUrl"]}/swagger/index.html"), "Catalog.API", HealthStatus.Degraded)
+                .AddUrlGroup(new Uri($"{builder.Configuration["ApiSettings:BasketUrl"]}/swagger/index.html"), "Basket.API", HealthStatus.Degraded)
+                .AddUrlGroup(new Uri($"{builder.Configuration["ApiSettings:OrderingUrl"]}/swagger/index.html"), "Ordering.API", HealthStatus.Degraded);
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -56,6 +62,13 @@ namespace Shopping.Aggregator
             app.UseAuthorization();
 
             app.MapControllers();
+
+            // health check json responce 
+            app.MapHealthChecks("/hc", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions() 
+            { 
+                Predicate = _=>true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.Run();
         }
