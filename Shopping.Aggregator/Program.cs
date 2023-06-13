@@ -18,6 +18,7 @@ namespace Shopping.Aggregator
 
             // Seri Logging
             builder.Host.UseSerilog(SeriLogger.Configure);
+            builder.Services.AddTransient<LoggingDelegatingHandler>();
 
             builder.Services.AddControllers();
             
