@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using Serilog;
+using Common.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Seri Logging
+builder.Host.UseSerilog(SeriLogger.Configure);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

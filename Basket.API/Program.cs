@@ -1,12 +1,14 @@
 using Basket.API;
 using Basket.API.GrpcServices;
 using Basket.API.Repos;
+using Common.Logging;
 using DiscountProtoServiceClient;
 using HealthChecks.UI.Client;
 using MassTransit;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace Basket.API
 {
@@ -16,7 +18,8 @@ namespace Basket.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Seri Logging
+            builder.Host.UseSerilog(SeriLogger.Configure);
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -45,7 +48,7 @@ namespace Basket.API
                 config.UsingRabbitMq((ctx, cfg) =>
                 {
                     cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-                    //cfg.UseHealthCheck(ctx);
+                    //TODO: cfg.UseHealthCheck(ctx);
                 });
             });
             //builder.Services.AddMassTransitHostedService();  

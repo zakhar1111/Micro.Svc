@@ -14,7 +14,6 @@ namespace Basket.API.Controllers
     public class BasketController : ControllerBase
     {
         private readonly IBasketRepository _repository;
-        private readonly ILogger<BasketController> _logger;
         private readonly DiscountGrpcService _discountGrpcService;
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly IMapper _mapper;
@@ -22,15 +21,13 @@ namespace Basket.API.Controllers
         public BasketController(
             IBasketRepository repository,
             DiscountGrpcService discountGrpcService,
-            ILogger<BasketController> logger,
             IPublishEndpoint publishEndpoint, 
             IMapper mapper)
         {
-            _repository = repository;
-            _discountGrpcService = discountGrpcService;
-            _logger = logger;
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository)); ;
+            _discountGrpcService = discountGrpcService ?? throw new ArgumentNullException(nameof(discountGrpcService)); 
             _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint)); ;
-            _mapper = mapper;
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet("{userName}", Name = "GetBasket")]

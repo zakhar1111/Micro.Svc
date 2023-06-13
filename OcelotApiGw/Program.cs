@@ -1,10 +1,15 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Ocelot.Cache.CacheManager;
+using Serilog;
+using Common.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Seri Logging
+builder.Host.UseSerilog(SeriLogger.Configure);
+
+
 builder.Services.AddOcelot().AddCacheManager(settings => settings.WithDictionaryHandle());
 
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
